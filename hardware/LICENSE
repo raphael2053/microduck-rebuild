@@ -1,0 +1,39 @@
+本目录（hardware/）采用与仓库其余部分不同的许可证。
+
+============================================================
+Creative Commons Attribution-NonCommercial-ShareAlike 4.0
+International (CC BY-NC-SA 4.0)
+
+SPDX-License-Identifier: CC-BY-NC-SA-4.0
+完整条款：https://creativecommons.org/licenses/by-nc-sa/4.0/
+法律文本：https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode
+============================================================
+
+Copyright 2026 raphael2053
+
+为什么这个目录不一样
+--------------------
+
+本目录中的 CAD、网格与装配图纸衍生自 Pollen Robotics 发布的 Microduck
+官方 MJCF 仿真模型与 STL 文件。上游 `pollen-robotics/microduck_rl` 的
+README 声明：代码为 Apache-2.0，而 "3D model files are licensed under
+Creative Commons BY-SA-NC"（即 CC BY-NC-SA 4.0，上游写法中三个要素的
+顺序为非标准排列）。
+
+该许可证的 ShareAlike 条款要求衍生作品必须以相同许可证发布。这不是本
+项目可以自行选择的事项 —— 上游模型的版权不属于本项目，因此无权为其衍
+生物更换许可证。
+
+适用范围
+--------
+
+受本许可证约束：
+  本目录下从官方 MJCF/STL 导出、转换或修改得到的几何文件
+  （CAD、网格、装配图纸等）。
+
+不受本许可证约束（属于事实性信息，不构成衍生作品，适用仓库根目录的
+Apache-2.0）：
+  尺寸数值、元件型号、BOM 数量、独立测量数据、文字描述，
+  以及自行从零绘制、未参考官方模型的零件 —— 后者需能说明独立来源。
+
+注意：NonCommercial 条款禁止将受约束内容用于商业目的。

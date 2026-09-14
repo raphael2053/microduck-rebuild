@@ -1,0 +1,47 @@
+# OMC runtime state
+.omc/
+
+# macOS
+.DS_Store
+
+# Editors / IDE
+.vscode/
+.idea/
+*.swp
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Dependencies
+node_modules/
+vendor/
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Build output
+dist/
+build/
+target/
+out/
+*.log
+
+# CAD / 3D
+*.FCStd1
+*.FCBak
+*~
+
+# RL training artifacts
+runs/
+logs/
+outputs/
+wandb/
+*.ckpt
+*.pt
+*.pth
+
+# Rust
+Cargo.lock.bak
