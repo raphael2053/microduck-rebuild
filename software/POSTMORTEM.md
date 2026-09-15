@@ -6,6 +6,60 @@
 
 ## 事故
 
+### 2026-09-15：AI-FanGe 的策略在官方仿真器里不工作 —— 接口相容不等于可用
+
+**影响**：阻塞 → 已解除（换官方策略）
+**环境**：仿真，macOS arm64
+**发现方式**：按上一条 postmortem 的修法实跑
+
+**现象**：官方 `infer_policy.py` 加载 AI-FanGe 的 `walk.onnx` **完全没有报错** —— 日志显示 `Observation size: 51 (expected: 51)`、默认姿态与 `NEUTRAL_POSE` 逐项一致。但鸭子一进 viewer 立刻趴下，`trunk_z` 稳定在 44mm（站立基准 120mm）。
+
+**排查步骤**：
+
+1. 比对两边重力向量的约定。官方 `get_projected_gravity()` 用 `[0,0,-1]`，AI-FanGe 的 `observer.py:85` 用 `[0,0,+1]` —— 符号相反。同时注意到日志里 `kp_fw=200`，而 AI-FanGe 跑 RL 用 `KP_RL=125`。
+
+2. 用官方脚本自身做无头扫描（stub 掉 viewer 使其跑固定帧数后退出，BAM、standby、decimation 全走真实路径），2×2 扫这两个变量。
+
+   结果：`trunk_z` 分别为 42.2 / 40.0 / 30.7 / 48.1 mm，**四种组合全部趴下**。两个假设都被证伪。
+
+3. **对照实验**：同一套脚手架跑官方 `alpha_walking.onnx`（加 `--new-cmd-obs`）。
+
+   结果：`trunk_z=118.4mm`、`x=+1.093m` —— 站着并前进。**脚手架无误，问题在策略本身。**
+
+**根因**：**接口相容不等于可用。** 51 维观测契约对得上，所以加载不报错；但策略权重里编码的是**它训练时那具身体的动力学** —— 质量、惯量、执行器参数、摩擦、关节限位。AI-FanGe 的训练模型已于 2026-09-11 从其仓库删除（`mjlab_microduck/src/mjlab_microduck/robot`），无从比对差异。
+
+这**推翻了上一条 postmortem 的修法**（那条写的是"换官方运行时、只替换 policy 文件"，并已标注未验证）。
+
+**影响范围**：阶段 0 改用官方策略即可完成，无阻塞。**不影响路线选择** —— AI-FanGe 的策略在他们**自己的实机**上有视频背书，"在上游仿真器里不工作"与"在实机上不工作"是两个命题。
+
+**修法**：阶段 0 用官方栈 + 官方策略。
+
+```bash
+cd ~/Workspace/opensource/microduck_rl && uv run mjpython scripts/infer_policy.py     --walking ~/Workspace/opensource/microduck-policies/alpha_walking.onnx --new-cmd-obs
+```
+
+**预防**：
+
+- **维度对得上只说明能加载，不说明能用。** 策略是权重不是纯函数契约，它隐含了训练时的那具身体。跨项目换策略前，先问"两边的机器人模型是不是同一个"
+- 判断"是我的脚手架有问题还是被测对象有问题"，**跑一个已知good的对照**。本次两次扫描共 4 组都失败，但一个对照就定了性
+
+**死胡同**（已证伪，别重走）：
+
+- **重力符号相反** —— 约定确实不同（官方 −1，AI-FanGe +1），但翻转后 `trunk_z=40.0mm`，没有改善
+- **`kp_fw` 不匹配** —— 官方 200、AI-FanGe RL 用 125，改成 125 后 `trunk_z=30.7mm`，更差
+- 两者叠加 —— 48.1mm，仍然趴下
+
+**可复用的验证手段**：
+
+```bash
+# 无头驱动官方 infer_policy.py：stub 掉 viewer，is_running() 跑够帧数返回 False
+# 让 main() 自己退出。BAM / standby / decimation 全走真实路径，不重新实现。
+# 完整脚本见本次排查，要点：
+#   mujoco.viewer.launch_passive = lambda m,d,**kw: Stub(m,d)
+#   ip.TerminalInput = NoInput   # 非 tty 下 termios 会炸
+```
+
+
 ### 2026-09-15：AI-FanGe 仓库的仿真跑不起来，鸭子不走
 
 **影响**：阻塞（阶段 0 / MDR-1）

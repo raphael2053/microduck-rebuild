@@ -40,19 +40,33 @@
 
 ## 阶段 0 · 仿真先跑通（0 元，本周）
 
-不花钱、不等货，先确认你的理解和工具链是对的。
+不花钱、不等货，先确认工具链是对的。**用官方栈 + 官方策略。**
 
-- clone `AI-FanGe/Microduck-build-tutorial`
-- 跑 `microduck/src/sim/sim_main.py`，用仓库里自带的 `src/agents/walk.onnx`
-- 这条路径走的是普通 MuJoCo + ONNX Runtime CPU，**不需要 CUDA**，Mac 上应该能跑
+```bash
+brew install uv
+git clone https://github.com/pollen-robotics/microduck_rl && cd microduck_rl && uv sync
+```
+
+官方策略在 Hub 的 `pollen-robotics/microduck-policies`。拿到后：
+
+```bash
+uv run mjpython scripts/infer_policy.py \
+    --walking <策略目录>/alpha_walking.onnx --new-cmd-obs
+```
+
+三个要点，缺一个就跑不起来：
+
+- ⚠️ **macOS 必须用 `mjpython` 而非 `python`** —— `launch_passive` 的线程归属限制
+- ⚠️ **`--new-cmd-obs` 不能省** —— 出厂策略是 61 维观测（13 维指令块），不加维度不匹配
+- ⚠️ **按键打进启动它的终端，不是 MuJoCo 窗口** —— 脚本用 `termios` 读 stdin
+
+按 `↑` 前进，`A`/`E` 转向（不是 A/D），`SPACE` 归零，`Q` 退出。
 
 **完成判据**：屏幕上的鸭子能走。
 
-**为什么这一步不能跳**：它同时验证了三件事 —— Python 环境对、MuJoCo 装好了、ONNX policy 能加载推理。这三样任何一个出问题，后面装好硬件也跑不起来，而那时你会分不清是硬件问题还是软件问题。
+**为什么不能跳**：一次验证三件事 —— Python 环境、MuJoCo、ONNX 推理。任一有问题，硬件装好也跑不起来，而那时你分不清是硬件还是软件的锅。
 
-**如果跑不起来**：先解决它再买东西。这一步的失败是最便宜的失败。
-
----
+⚠️ **不要用 AI-FanGe 的 `walk.onnx` 做这一步。** 它的 51 维接口与官方 legacy 模式相容、加载完全不报错，但在上游模型上站不住 —— 策略权重编码的是它训练时那具身体的动力学。实测对照：官方策略 `trunk_z=118mm` 并前进 1.09m，AI-FanGe 的 42mm 趴下。详见 [../software/POSTMORTEM.md](../software/POSTMORTEM.md)。它在**实机**上的有效性是另一个命题（有视频背书），留到阶段 6 验。
 
 ## 阶段 1 · 下单
 
