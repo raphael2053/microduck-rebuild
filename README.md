@@ -11,9 +11,15 @@ Microduck 的**软件是真开源**（Apache-2.0），**硬件不是**。所以"
 
 详见 [docs/upstream.md](docs/upstream.md) 的开源边界分析。
 
+## 下一步做什么
+
+看 **[docs/roadmap.md](docs/roadmap.md)** —— 分七个阶段，从零成本的仿真验证到实机走路，每阶段有完成判据。
+
+路线已定：**走 AI-FanGe 路线**。理由是它被证明走通了（有实机行走视频），而且零自制 PCB —— 把本项目排名第一和第二的阻塞项整个删掉了。
+
 ## 当前状态
 
-**规划阶段** —— 无实机，纯自制路线。尚未开始实现。
+**规划阶段** —— 无实机。路线已定，尚未开始采购与实现。
 
 | 线 | 目录 | 状态 |
 |---|---|---|
@@ -33,6 +39,7 @@ Microduck 的**软件是真开源**（Apache-2.0），**硬件不是**。所以"
 
 ## 文档
 
+- [docs/roadmap.md](docs/roadmap.md) —— **复刻路线图**：路线决定、七个阶段、风险清单
 - [docs/dictionary.md](docs/dictionary.md) —— **术语表**：给软件工程师看的机器人硬件词典，看不懂别的文档时先来这里
 - [docs/upstream.md](docs/upstream.md) —— 上游官方事实：开源边界、许可证
 - [docs/ecosystem.md](docs/ecosystem.md) —— 生态导航：社区复刻项目与两条路线对比

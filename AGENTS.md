@@ -32,7 +32,7 @@
 
 | 目录 | 用途 | 自有 AGENTS.md |
 |---|---|---|
-| `docs/` | 事实基线。`dictionary.md` 是术语表；`upstream.md` 只管上游官方事实；`ecosystem.md` 是社区项目的**唯一归属地**，别在两处重复记录；`hardware.md` 是已知规格；`open-questions.md` 按**阻塞程度**排序、不是追加序，插入新条目要重排。 | 无 |
+| `docs/` | 事实基线。`roadmap.md` 是执行计划与路线决定；`dictionary.md` 是术语表；`upstream.md` 只管上游官方事实；`ecosystem.md` 是社区项目的**唯一归属地**，别在两处重复记录；`hardware.md` 是已知规格；`open-questions.md` 按**阻塞程度**排序、不是追加序，插入新条目要重排。 | 无 |
 | `software/` | 控制栈与 RL 训练线 | `software/AGENTS.md` |
 | `hardware/` | 机械与电子线 | `hardware/AGENTS.md` |
 | `tools/` | 检查脚本。目前只有 `checks/check-links.py`。 | 无 |

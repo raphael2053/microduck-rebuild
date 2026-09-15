@@ -49,4 +49,6 @@ RPI Robot HAT 按官方文件打样；`imu_to_dxl` 审查社区重建原理图�
 
 ## 参考
 
-社区复刻项目的导航、核实状态与可用之处，见 [../docs/ecosystem.md](../docs/ecosystem.md)。其中有两条互不兼容的复刻路线，选哪条会决定本目录后续全部工作 —— 尚未决定。
+社区复刻项目的导航、核实状态与可用之处，见 [../docs/ecosystem.md](../docs/ecosystem.md)。
+
+**路线已定：走 AI-FanGe 路线**，理由与执行计划见 [../docs/roadmap.md](../docs/roadmap.md)。这条路线零自制 PCB，本目录原先列的三大难点里，`imu_to_dxl` 与线束两项**直接消失**，只剩结构件打印。

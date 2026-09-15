@@ -17,7 +17,7 @@
 - 需要：审查重建原理图 → 自行打样 → 验证
 - 这是整个硬件线风险最高的单点
 - 目前有两份独立重建：`fanhao375/microduck-replica`（含嘉立创EDA 工程、原理图、PCB STEP、接线表）与 `pablo-mano/microduck-replica`。两份对上则可信度大增，对不上说明至少一份有问题
-- **这个阻塞项可以整个绕开** —— `AI-FanGe/Microduck-build-tutorial` 改用现成的 ROBOTIS OpenRB-150 做舵机总线，零自制 PCB，代价是主控与 IMU 都换、软件侧要自行适配。见 `ecosystem.md` 的路线对比
+- ✅ **本项目已决定绕开它** —— 走 AI-FanGe 路线，用现成的 ROBOTIS OpenRB-150 做舵机总线，零自制 PCB。本条对当前路线**不再是阻塞项**，保留是为了将来若转向官方路线时能接着用。见 [roadmap.md](roadmap.md)
 
 ### 3. 线缆走线
 完全无文档。15 个舵机的菊花链走向、传感器排线路径、电源分配，都要自己规划。
