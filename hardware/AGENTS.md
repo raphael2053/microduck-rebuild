@@ -31,6 +31,25 @@
 | `imu_to_dxl` 板 | **是** —— 官方未发布，风险最高的单点 |
 | 线束 | **是** —— 完全无文档 |
 
+### 官方总线拓扑
+
+整机只有**一条**串口总线，没有第二条。资料源为上游 `docs/design/robotd-design.md` §1.1。
+
+```mermaid
+graph LR
+    R[robotd 控制线程] -->|serialport · TIOCEXCL| T["/dev/ttyS2<br/>1 Mbps · Dynamixel v2"]
+    T --> A[id 200<br/>imu_to_dxl v2]
+    T --> B[id 20-24<br/>左腿 5 舵机]
+    T --> C[id 30-34<br/>颈 · 头 · 嘴 5 舵机]
+    T --> D[id 10-14<br/>右腿 5 舵机]
+```
+
+**IMU 排在 id 向量第一位**，好让它在舵机爆发式应答之前先回。它和 15 个舵机在**同一次 `sync_read`** 里被读出 —— 因为 v2 板就挂在 Dynamixel 总线上，从舵机应答的同一段寄存器里吐出片内 SFLP 四元数。一块板、一条代码路径、没有 IMU 抽象层。
+
+⚠️ **串口控制台会抢总线。** Armbian 默认在 UART2 上跑登录控制台，`agetty` 占着口会让所有舵机对其他进程**完全不可见**。官方的 `setup-board.sh` 屏蔽了这个 unit；`fuser -v /dev/ttyS2` 是查"谁占着总线"的命令。
+
+⚠️ **本项目选的 AI-FanGe 路线不是这个拓扑** —— 它用 ROBOTIS OpenRB-150 经 USB 接主控，舵机 ID 是 1–14 顺序编号，没有 `imu_to_dxl`，IMU 走独立 I²C。两套 ID 表**不通用**，见 `../docs/ecosystem.md`。
+
 ## 目录地图
 
 | 文件 | 内容 |

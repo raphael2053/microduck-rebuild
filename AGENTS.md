@@ -28,6 +28,60 @@
 - **硬件线部分依赖软件线。** 几个卡 BOM 的问题（IMU 数量、15 电机 vs 14 关节输出）只能靠读上游源码回答，不能靠推测。见 `docs/open-questions.md`。
 - **许可证按目录分区**：根 Apache-2.0，`hardware/` CC BY-NC-SA 4.0。见下方「约定」。
 
+### 官方整机架构（C4 L1 · 系统上下文）
+
+以下描述的是**官方 Microduck**，即复刻的目标与参照设计。资料源为上游 `docs/design/`。
+⚠️ 本项目选的 AI-FanGe 路线**不跑这套 Rust 栈**，记在这里是为了知道"正品长什么样"。
+
+```mermaid
+graph TB
+    U1[手柄<br/>BLE/USB]:::p --> S
+    U2[手机 App<br/>BLE]:::p --> S
+    U3[笔记本<br/>ssh]:::p --> S
+    U4[远程对端<br/>WebRTC]:::p --> S
+    S[Microduck<br/>一块 RK3566 板<br/>7 个 daemon]:::s
+    S --> E1[15 舵机 + IMU<br/>单条 Dynamixel 总线]:::e
+    E2[GitHub Releases<br/>签名固件]:::e --> S
+    classDef p fill:#e8f0fe,stroke:#4a76c7
+    classDef s fill:#1f6feb,color:#fff,stroke:#1f6feb
+    classDef e fill:#f0f0f0,stroke:#999
+```
+
+### 七个 daemon（C4 L2 · 容器）
+
+```mermaid
+graph TB
+    subgraph 传输层["传输层 —— 不拥有机器人的任何状态"]
+        padd[padd<br/>手柄]
+        btd[btd<br/>BLE]
+        mediad[mediad<br/>摄像头 + WebRTC]
+        robotctl[robotctl<br/>CLI]
+    end
+    subgraph 核心["核心 —— 各自拥有一块状态"]
+        robotd[robotd<br/>50Hz 控制环 · 安全层<br/>唯一能碰电机的进程]:::core
+        configd[configd<br/>WiFi · 身份 · 配对]
+        updaterd[updaterd<br/>校验 · 切换 · 回滚]
+    end
+    tofd[tofd<br/>8x8 深度<br/>只发布不应答]
+    padd --> robotd
+    btd --> robotd & configd & updaterd
+    mediad --> robotd & configd & updaterd
+    robotctl --> robotd & configd & updaterd & tofd
+    tofd -.-> mediad & robotd
+    robotd --> BUS[(Dynamixel 总线<br/>/dev/ttyS2 · 1Mbps)]
+    configd --> DBUS[(BlueZ · NetworkManager)]
+    updaterd --> FS[("/opt/robot/daemon/current")]
+    classDef core fill:#1f6feb,color:#fff
+```
+
+进程间一律 **unix socket 上的 JSON-RPC 2.0，一行一个对象**（NDJSON）。
+
+三条设计决策，是整个架构的骨架：
+
+1. **只有 `robotd` 能碰电机。** 客户端发的是*意图*（"这么快走"、"看那边"），`robotd` 的安全层决定什么真正可执行。
+2. **`configd` / `updaterd` / `btd` 能在 `robotd` 死掉后存活** —— 它们对 `robotd` 无 systemd 依赖。控制环起不来的机器人，正是最需要被重配、更新、回滚的那台。
+3. **发布是整体替换而非打补丁。** 一个版本落成 `releases/<ver>/` 整个目录，切 `current` 符号链接，然后问 `robotd` 健不健康；不健康就自己换回去。
+
 ## 目录地图
 
 | 目录 | 用途 | 自有 AGENTS.md |
