@@ -55,7 +55,7 @@
 
 **Commit。** Conventional Commits 前缀（`docs:`、`chore:` 等）+ 正文说明动机而非罗列改动 + 尾注 `Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>`。
 
-**MCP 用个人 workspace。** 本机有两个 Linear MCP，本项目只允许 `mcp__linear-personal__*`，`mcp__linear__*` 是公司的、禁止使用。详见 `CLAUDE.md`。
+**MCP 用个人 workspace。** 本机有两个 Linear MCP，本项目只允许 `mcp__linear-personal__*`，`mcp__linear-company__*` 禁止使用。详见 `CLAUDE.md`。
 
 **新术语要进术语表。** 本项目的维护者是软件工程师出身，机械与电子术语不是共识。文档里首次引入一个硬件/机械/电子术语时，在 `docs/dictionary.md` 补一条一句话解释 —— 没解释的术语等于没写。
 

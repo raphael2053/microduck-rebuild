@@ -10,10 +10,10 @@ Claude Code 自动加载的项目指令。完整的 agent harness 见 [AGENTS.md
 
 | server | workspace | 本项目 |
 |---|---|---|
-| `linear` | **公司** | 🚫 禁止使用 |
+| `linear-company` | **公司** | 🚫 禁止使用 |
 | `linear-personal` | **个人** | ✅ 唯一允许 |
 
-⚠️ `linear` 这个名字没有标明归属，最容易误用 —— **看到 `mcp__linear__*` 就是公司的**，本项目一律不碰。
+两个名字都显式标了归属，不存在没后缀的歧义条目 —— 看到 `mcp__linear-company__*` 就是公司的，本项目一律不碰。
 
 具体说，在本项目里不要用公司 workspace 做任何事：不建 issue、不改 issue、不读公司数据、不把本项目的任何信息写进去。混淆个人项目与公司项目不可接受。
 
