@@ -33,6 +33,7 @@ Microduck 的**软件是真开源**（Apache-2.0），**硬件不是**。所以"
 
 ## 文档
 
+- [docs/dictionary.md](docs/dictionary.md) —— **术语表**：给软件工程师看的机器人硬件词典，看不懂别的文档时先来这里
 - [docs/upstream.md](docs/upstream.md) —— 上游官方事实：开源边界、许可证
 - [docs/ecosystem.md](docs/ecosystem.md) —— 生态导航：社区复刻项目与两条路线对比
 - [docs/hardware.md](docs/hardware.md) —— 已知硬件规格

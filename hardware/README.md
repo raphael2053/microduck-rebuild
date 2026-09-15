@@ -43,6 +43,10 @@ RPI Robot HAT 按官方文件打样；`imu_to_dxl` 审查社区重建原理图�
 
 受约束的只有衍生几何。尺寸、型号、BOM 数量、独立测量与文字描述属于事实，不构成衍生作品，适用根目录的 Apache-2.0。见 [../docs/upstream.md](../docs/upstream.md#许可证约束)。
 
+## 看不懂术语
+
+本目录的文档术语密度最高。[../docs/dictionary.md](../docs/dictionary.md) 是给软件工程师写的词典 —— 过孔、沉头孔、DNP、上拉、去耦、钳位这些都在里面。
+
 ## 参考
 
 社区复刻项目的导航、核实状态与可用之处，见 [../docs/ecosystem.md](../docs/ecosystem.md)。其中有两条互不兼容的复刻路线，选哪条会决定本目录后续全部工作 —— 尚未决定。

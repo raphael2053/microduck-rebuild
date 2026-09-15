@@ -32,7 +32,7 @@
 
 | 目录 | 用途 | 自有 AGENTS.md |
 |---|---|---|
-| `docs/` | 事实基线。`upstream.md` 只管上游官方事实；`ecosystem.md` 是社区项目的**唯一归属地**，别在两处重复记录；`hardware.md` 是已知规格；`open-questions.md` 按**阻塞程度**排序、不是追加序，插入新条目要重排。 | 无 |
+| `docs/` | 事实基线。`dictionary.md` 是术语表；`upstream.md` 只管上游官方事实；`ecosystem.md` 是社区项目的**唯一归属地**，别在两处重复记录；`hardware.md` 是已知规格；`open-questions.md` 按**阻塞程度**排序、不是追加序，插入新条目要重排。 | 无 |
 | `software/` | 控制栈与 RL 训练线 | `software/AGENTS.md` |
 | `hardware/` | 机械与电子线 | `hardware/AGENTS.md` |
 | `tools/` | 检查脚本。目前只有 `checks/check-links.py`。 | 无 |
@@ -54,5 +54,7 @@
 **语言：以中文为主。** 文档、注释、commit message 用中文书写，但**专业名词保持英文原文，不做翻译** —— harness、MuJoCo、BOM、policy、daemon、ONNX、submodule、ShareAlike、sim2real 等一律用原文。中文承担叙述，英文承担术语。
 
 **Commit。** Conventional Commits 前缀（`docs:`、`chore:` 等）+ 正文说明动机而非罗列改动 + 尾注 `Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>`。
+
+**新术语要进术语表。** 本项目的维护者是软件工程师出身，机械与电子术语不是共识。文档里首次引入一个硬件/机械/电子术语时，在 `docs/dictionary.md` 补一条一句话解释 —— 没解释的术语等于没写。
 
 **事实必须可追溯。** 写进 `docs/` 的任何上游事实都要标注来源与调研日期。来源冲突或未经硬件验证的条目用 `⚠️` 标注，不要抹平分歧。这个仓库的价值建立在"哪些是确证的、哪些是猜的"分得清楚上。
