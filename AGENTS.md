@@ -35,8 +35,8 @@
 | `docs/` | 事实基线。`roadmap.md` 是执行计划与路线决定；`dictionary.md` 是术语表；`upstream.md` 只管上游官方事实；`ecosystem.md` 是社区项目的**唯一归属地**，别在两处重复记录；`hardware.md` 是已知规格；`open-questions.md` 按**阻塞程度**排序、不是追加序，插入新条目要重排。 | 无 |
 | `software/` | 控制栈与 RL 训练线 | `software/AGENTS.md` |
 | `hardware/` | 机械与电子线 | `hardware/AGENTS.md` |
-| `tools/` | 检查脚本。目前只有 `checks/check-links.py`。 | 无 |
-| `.claude/` | agent harness。人维护。 | 无 |
+| `tools/` | `checks/` 是校验脚本（L5），`hooks/` 是拦截脚本（L4）。 | 无 |
+| `.claude/` | agent harness。`settings.json` 挂 hook，`skills/` 放 skill。人维护。 | 无 |
 
 ## 约定
 
@@ -55,7 +55,7 @@
 
 **Commit。** Conventional Commits 前缀（`docs:`、`chore:` 等）+ 正文说明动机而非罗列改动 + 尾注 `Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>`。
 
-**MCP 用个人 workspace。** 本机有两个 Linear MCP，本项目只允许 `mcp__linear-personal__*`，`mcp__linear-company__*` 禁止使用。详见 `CLAUDE.md`。
+**MCP 用个人 workspace。** 本机有两个 Linear MCP，本项目只允许 `mcp__linear-personal__*`，`mcp__linear-company__*` 禁止使用。详见 `CLAUDE.md`。这条**由 L4 hook 强制**（`tools/hooks/linear-guard.py`），不是靠自觉 —— 它同时校验 Linear 条目是否建在 `microduck-rebuild`（MDR）team 下。
 
 **新术语要进术语表。** 本项目的维护者是软件工程师出身，机械与电子术语不是共识。文档里首次引入一个硬件/机械/电子术语时，在 `docs/dictionary.md` 补一条一句话解释 —— 没解释的术语等于没写。
 
