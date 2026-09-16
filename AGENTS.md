@@ -4,11 +4,13 @@
 
 ## 产品
 
-从零复刻 Microduck —— Pollen Robotics / Hugging Face 的 $399 双足鸭形机器人。无实机，纯自制路线。
+从零复刻 Microduck —— Pollen Robotics / Hugging Face 的 $399 双足鸭形机器人。无实机，纯自制。
 
-- `software/` —— 控制栈与 RL 训练。上游开源，所以这条线是**改造**，不是逆向。
-- `hardware/` —— 机械与电子。上游未发布设计文件，这条线是**真逆向**。
-- `docs/` —— 两条线共享的上游调研事实基线。
+**参考路线：`fanhao375/microduck-replica`。** 跑官方 Rust 栈，舵机换国产飞特 HD-1910，两块板自己打样。
+
+- `software/` —— 控制栈与 RL 训练。官方栈是 Apache-2.0，这条线是**改造 + 重训**，不是逆向。
+- `hardware/` —— 机械与电子。官方未发布设计文件，这条线是**真逆向**。
+- `docs/` —— 两条线共享的事实基线。
 
 ## 技术
 
@@ -20,73 +22,61 @@
 
 上游接入方式（submodule / fork / 脚本拉取）**尚未决定**，定了之后写进本节与目录地图。
 
+⚠️ **舵机换飞特带来两处软件工作**：总线协议模块要换（`rustypot` 有 `Sts3215PyController` 但**无 HD-1910 的类**，兼容性未验证），且**官方 9 个 ONNX 策略全部作废，要按 HD-1910 重训**。
+
 ## 结构
 
 两条线并行，耦合点在 `docs/`：
 
-- **软件线不依赖硬件线。** 上游 `scripts/duck-sim` 能让真实 daemon 跑在 MuJoCo 的身体上，所以无实机也能把软件线推到底。
-- **硬件线部分依赖软件线。** 几个卡 BOM 的问题（IMU 数量、15 电机 vs 14 关节输出）只能靠读上游源码回答，不能靠推测。见 `docs/open-questions.md`。
+- **软件线不依赖硬件线。** 官方 `scripts/duck-sim` 能让真实 daemon 跑在 MuJoCo 的身体上，所以无实机也能把软件线推到底。
+- **硬件线部分依赖软件线。** 几个卡 BOM 的问题只能靠读官方源码回答，不能靠推测。见 `docs/open-questions.md`。
 - **许可证按目录分区**：根 Apache-2.0，`hardware/` CC BY-NC-SA 4.0。见下方「约定」。
 
-### 官方整机架构（C4 L1 · 系统上下文）
+### 本项目整机架构
 
-以下描述的是**官方 Microduck**，即复刻的目标与参照设计。资料源为上游 `docs/design/`。
-⚠️ 本项目选的 AI-FanGe 路线**不跑这套 Rust 栈**，记在这里是为了知道"正品长什么样"。
-
-```mermaid
-graph TB
-    U1[手柄<br/>BLE/USB]:::p --> S
-    U2[手机 App<br/>BLE]:::p --> S
-    U3[笔记本<br/>ssh]:::p --> S
-    U4[远程对端<br/>WebRTC]:::p --> S
-    S[Microduck<br/>一块 RK3566 板<br/>7 个 daemon]:::s
-    S --> E1[15 舵机 + IMU<br/>单条 Dynamixel 总线]:::e
-    E2[GitHub Releases<br/>签名固件]:::e --> S
-    classDef p fill:#e8f0fe,stroke:#4a76c7
-    classDef s fill:#1f6feb,color:#fff,stroke:#1f6feb
-    classDef e fill:#f0f0f0,stroke:#999
-```
-
-### 七个 daemon（C4 L2 · 容器）
+跑的是官方 Rust 栈 —— 七个 daemon 经 unix socket 上的 JSON-RPC 通信，只有 `robotd` 能碰电机，50 Hz 控制环独占一条串口总线。
 
 ```mermaid
 graph TB
-    subgraph 传输层["传输层 —— 不拥有机器人的任何状态"]
-        padd[padd<br/>手柄]
-        btd[btd<br/>BLE]
-        mediad[mediad<br/>摄像头 + WebRTC]
-        robotctl[robotctl<br/>CLI]
+    subgraph BOARD["Radxa Zero 3W · RK3566 · 装在头里"]
+        direction TB
+        RD[robotd<br/>50Hz 环 · 安全层]:::core
+        OTH[configd · updaterd · btd<br/>padd · mediad · tofd]
     end
-    subgraph 核心["核心 —— 各自拥有一块状态"]
-        robotd[robotd<br/>50Hz 控制环 · 安全层<br/>唯一能碰电机的进程]:::core
-        configd[configd<br/>WiFi · 身份 · 配对]
-        updaterd[updaterd<br/>校验 · 切换 · 回滚]
-    end
-    tofd[tofd<br/>8x8 深度<br/>只发布不应答]
-    padd --> robotd
-    btd --> robotd & configd & updaterd
-    mediad --> robotd & configd & updaterd
-    robotctl --> robotd & configd & updaterd & tofd
-    tofd -.-> mediad & robotd
-    robotd --> BUS[(Dynamixel 总线<br/>/dev/ttyS2 · 1Mbps)]
-    configd --> DBUS[(BlueZ · NetworkManager)]
-    updaterd --> FS[("/opt/robot/daemon/current")]
+    HAT["RPI Robot HAT<br/>配电 · 音频 · 总线收发<br/>🏭 官方开源，自己打样"]:::mk
+    BOARD --> HAT
+    HAT -->|"/dev/ttyS2 · 1Mbps<br/>单线半双工 · 接头 2.0mm"| BUS[(舵机总线)]
+    BUS --> IMU["imu_to_dxl id 200<br/>LSM6DSV16X<br/>✏️ 社区重建，未验证"]:::warn
+    BUS --> L["id 20-24 左腿"]
+    BUS --> H["id 30-34 颈·头·嘴"]
+    BUS --> R["id 10-14 右腿"]
+    L & H & R -.-> SV["飞特 HD-1910-C001 ×15<br/>⚠️ 非官方 XL330"]:::delta
+    BAT["NP-F550 2S<br/>6.6-8.4V"] --> HAT
     classDef core fill:#1f6feb,color:#fff
+    classDef mk fill:#fff3cd,stroke:#d39e00
+    classDef warn fill:#f8d7da,stroke:#c00
+    classDef delta fill:#d1ecf1,stroke:#0c5460
 ```
 
-进程间一律 **unix socket 上的 JSON-RPC 2.0，一行一个对象**（NDJSON）。
+**完整的官方架构、状态机与时序见 [docs/architecture.md](docs/architecture.md)** —— 七个 daemon 的职责分工、`robotd` 内部数据流、50Hz tick 时序、上电使能状态机、更新回滚状态机。本项目跑的就是那套软件，本节只放顶层视图。
 
-三条设计决策，是整个架构的骨架：
+各线的细节图在 [software/AGENTS.md](software/AGENTS.md) 与 [hardware/AGENTS.md](hardware/AGENTS.md)。
 
-1. **只有 `robotd` 能碰电机。** 客户端发的是*意图*（"这么快走"、"看那边"），`robotd` 的安全层决定什么真正可执行。
-2. **`configd` / `updaterd` / `btd` 能在 `robotd` 死掉后存活** —— 它们对 `robotd` 无 systemd 依赖。控制环起不来的机器人，正是最需要被重配、更新、回滚的那台。
-3. **发布是整体替换而非打补丁。** 一个版本落成 `releases/<ver>/` 整个目录，切 `current` 符号链接，然后问 `robotd` 健不健康；不健康就自己换回去。
+### 与官方原版的三处差异
+
+| | 官方 | 本项目 | 后果 |
+|---|---|---|---|
+| **舵机** | Dynamixel XL330-M288-T ×15 | **飞特 HD-1910-C001 ×15** | 协议模块要换；**策略全部重训**；8 个配合件改模（舵盘凹凸相反） |
+| **接头** | 2.5mm | **2.0mm** | ⚠️ **脚序与 Dynamixel 相反**，接错电源脚会烧 |
+| **电压** | 额定 6V，实跑 6.6–8.2V，**超压 37%** | 额定 4–8.4V，**在额定内** | 这一项是升级 —— ⚠️ 但满电 8.4V 顶格，零余量 |
+
+两块板都要自己打样：**Robot HAT**（官方已开源 KiCad，照打即可）、**`imu_to_dxl`**（⚠️ 官方从未发布，社区重建版未经流片验证 —— 全项目风险最高的单点）。
 
 ## 目录地图
 
 | 目录 | 用途 | 自有 AGENTS.md |
 |---|---|---|
-| `docs/` | 事实基线。`roadmap.md` 是执行计划与路线决定；`dictionary.md` 是术语表；`upstream.md` 只管上游官方事实；`ecosystem.md` 是社区项目的**唯一归属地**，别在两处重复记录；`hardware.md` 是已知规格；`open-questions.md` 按**阻塞程度**排序、不是追加序，插入新条目要重排。 | 无 |
+| `docs/` | 事实基线。`architecture.md` 是官方架构完整参考（状态机/时序全版）；`roadmap.md` 是执行计划与路线决定；`dictionary.md` 是术语表；`upstream.md` 只管上游官方事实；`ecosystem.md` 是社区项目的**唯一归属地**，别在两处重复记录；`hardware.md` 是已知规格；`open-questions.md` 按**阻塞程度**排序、不是追加序，插入新条目要重排。 | 无 |
 | `software/` | 控制栈与 RL 训练线。`POSTMORTEM.md` 记排查过的坑，排查前先扫 | `software/AGENTS.md` |
 | `hardware/` | 机械与电子线 | `hardware/AGENTS.md` |
 | `tools/` | `checks/` 是校验脚本（L5），`hooks/` 是拦截脚本（L4）。 | 无 |

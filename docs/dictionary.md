@@ -63,16 +63,16 @@
 
 | 器件 | 简称 | 是什么 | 用在哪 |
 |---|---|---|---|
-| **Radxa Zero 3W** | Radxa | 市售单板机，树莓派 Zero 形态，65×30mm | 官方路线的主控（大脑） |
-| **RK3566** | 3566 | Radxa 上那颗 Rockchip 四核 ARM 芯片，带 0.8–1 TOPS NPU | 同上 |
-| **Raspberry Pi Zero 2 W** | Pi Zero / 派零 | 树莓派最小型号 | AI-FanGe 路线的主控 |
-| **Dynamixel XL330-M288-T** | XL330 / 330 | 韩国 ROBOTIS 的总线舵机，18g。`M288` 指减速比 288:1 | 15 个关节 |
-| **ROBOTIS OpenRB-150** | openRB / RB-150 | 现成的舵机控制板，USB 接主控 | AI-FanGe 用它替掉两块自制板 |
-| **飞特 HD-1910** | HD1910 / 1910 | 国产总线舵机，XL330 的替代候选。⚠️ 脚序与 Dynamixel 完全相反 | 降成本路线 |
+| **Radxa Zero 3W** | Radxa | 市售单板机，树莓派 Zero 形态，65×30mm | ✅ **本路线**的主控（大脑） |
+| **RK3566** | 3566 | Radxa 上那颗 Rockchip 四核 ARM 芯片，带 0.8–1 TOPS NPU | ✅ 同上 |
+| **Raspberry Pi Zero 2 W** | Pi Zero / 派零 | 树莓派最小型号 | AI-FanGe 路线的主控（**本项目不用**） |
+| **Dynamixel XL330-M288-T** | XL330 / 330 | 韩国 ROBOTIS 的总线舵机，18g。`M288` 指减速比 288:1 | 官方的 15 个关节（**本项目不用** —— 供货 4–6 周且涨价） |
+| **ROBOTIS OpenRB-150** | openRB / RB-150 | 现成的舵机控制板，USB 接主控 | AI-FanGe 用它替掉两块自制板（**本项目不用**） |
+| **飞特 HD-1910-C001** | HD1910 / 1910 | 国产总线舵机。力矩 2.5 倍、不超压、虚位更小。⚠️ 脚序与 Dynamixel **完全相反**，接头 2.0mm | ✅ **本路线**的 15 个关节 |
 | **IMX219** |  | 索尼图像传感器，即"树莓派 Camera v2"那颗 | 眼睛 |
 | **VL53L8CX / VL53L5CX** | L8CX / L5CX | ST 的 ToF 测距芯片，8×8 / 4×4 区 | 测距（**不是**激光雷达） |
-| **LSM6DSV16X** |  | ST 的 IMU，片内带 SFLP 融合 | 官方路线，装在 `imu_to_dxl` 上 |
-| **BNO080 / 085 / 086** | BNO08x | CEVA 的 IMU，走 I²C | AI-FanGe 路线 |
+| **LSM6DSV16X** |  | ST 的 IMU，片内带 SFLP 融合 | ✅ **本路线**，装在 `imu_to_dxl` 板上 |
+| **BNO080 / 085 / 086** | BNO08x | CEVA 的 IMU，走 I²C | AI-FanGe 路线（**本项目不用**） |
 | **NP-F550** | F550 | 索尼摄像机电池规格，2S 锂电，6.6–8.4V | 供电。⚠️ 别买 F970，厚一倍装不进去 |
 | **STM32G031F8P6** | G031 | `imu_to_dxl` 板上那颗小 MCU | 选它是因为 USART 带**硬件 DE** |
 | **TLV320AIC3104 / PAM8406D** |  | 音频 codec / 功放 | 都在 HAT 上 |

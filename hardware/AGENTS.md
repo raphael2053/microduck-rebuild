@@ -4,13 +4,15 @@
 
 机械与电子的逆向线。官方**没有**发布设计文件，这里是真逆向。
 
-无实机，无基准件可对照 —— 所有尺寸与电气细节只能靠社区逆向成果加官方仿真模型推导。阶段规划与难点分析见 `README.md`，此处不重复。
+无实机，无基准件可对照 —— 所有尺寸与电气细节只能靠社区逆向成果加官方仿真模型推导。
+
+参考路线 `fanhao375/microduck-replica`：舵机用国产飞特 HD-1910，两块板自己打样。阶段规划与难点见 `README.md`，此处不重复。
 
 ## 技术
 
 | 用途 | 工具 | 状态 |
 |---|---|---|
-| 机械 CAD | **SolidWorks** | 与 `fanhao375/microduck-replica-cad` 对齐 —— 目前唯一公开的完整可编辑模型 |
+| 机械 CAD | **SolidWorks** | 与 `fanhao375/microduck-replica-cad` **v2.0 飞特版**对齐（文件带 `-FT` 后缀） |
 | PCB | **嘉立创EDA 专业版** | 与 `fanhao375/microduck-replica` 的 `imu_to_dxl` 工程（`.eprj2`）对齐 |
 | PCB（官方件） | KiCad | 官方 Robot HAT 本身是 KiCad 工程，用到时单独开 |
 | 制造 | 3D 打印 + PCB 打样 | 材料与工艺未定 |
@@ -19,61 +21,47 @@
 
 ## 结构
 
-需要自制的与不需要的，分清楚：
+整机的总线归属、`robotd` 与硬件的交互见 [../docs/architecture.md](../docs/architecture.md)。本节只讲**本路线的硬件形态**。
 
-| 部件 | 是否需要复刻 |
+### 自制与采购的分界
+
+| 部件 | 怎么来 |
 |---|---|
-| 主控板 Radxa Zero 3W (RK3566) | **否** —— 现成模块，直接买 |
-| RPI Robot HAT | **否** —— 官方已开源完整 KiCad + gerber + BOM + pick-place |
-| 电池 Sony NP-F550 | **否** —— 摄像机通用电池 |
-| 传感器（IMX219 / VL53L8CX / LSM6DSV16X） | **否** —— 均为常见型号 |
-| 结构件（15 刚体 / 47 网格 / ~325 M2 紧固件） | **是** —— 需公差迭代 |
-| `imu_to_dxl` 板 | **是** —— 官方未发布，风险最高的单点 |
-| 线束 | **是** —— 完全无文档 |
+| 主控 Radxa Zero 3W (RK3566) | 🛒 **买** —— 现成模块，65×30mm，就是按头壳里那个槽设计的 |
+| 电池 Sony NP-F550 | 🛒 **买** —— 摄像机通用电池，2S，6.6–8.4V |
+| 传感器 IMX219 / VL53L8CX / LSM6DSV16X | 🛒 **买** —— 均为常见型号 |
+| 舵机 飞特 HD-1910-C001 ×15 | 🛒 **买** —— ⚠️ 非官方 XL330 |
+| **RPI Robot HAT** | 🏭 **自己打样** —— 官方已开源完整 KiCad + gerber + BOM + 贴片坐标，照打即可 |
+| **`imu_to_dxl` 板** | ✏️ **自己画/打样** —— ⚠️ 官方从未发布，社区重建版**未经流片验证**。全项目风险最高的单点 |
+| 结构件 | 🖨️ **打印** —— ⚠️ 飞特版 **8 个配合件要改模**（HD-1910 舵盘凸、XL330 凹） |
+| 线束 | ✏️ **自己做** —— ⚠️ 官方无任何走线资料 |
 
-### 官方总线拓扑
-
-整机只有**一条**串口总线，没有第二条。资料源为上游 `docs/design/robotd-design.md` §1.1。
-
-```mermaid
-graph LR
-    R[robotd 控制线程] -->|serialport · TIOCEXCL| T["/dev/ttyS2<br/>1 Mbps · Dynamixel v2"]
-    T --> A[id 200<br/>imu_to_dxl v2]
-    T --> B[id 20-24<br/>左腿 5 舵机]
-    T --> C[id 30-34<br/>颈 · 头 · 嘴 5 舵机]
-    T --> D[id 10-14<br/>右腿 5 舵机]
-```
-
-**IMU 排在 id 向量第一位**，好让它在舵机爆发式应答之前先回。它和 15 个舵机在**同一次 `sync_read`** 里被读出 —— 因为 v2 板就挂在 Dynamixel 总线上，从舵机应答的同一段寄存器里吐出片内 SFLP 四元数。一块板、一条代码路径、没有 IMU 抽象层。
-
-⚠️ **串口控制台会抢总线。** Armbian 默认在 UART2 上跑登录控制台，`agetty` 占着口会让所有舵机对其他进程**完全不可见**。官方的 `setup-board.sh` 屏蔽了这个 unit；`fuser -v /dev/ttyS2` 是查"谁占着总线"的命令。
-
-### 本项目的拓扑（AI-FanGe 路线）
-
-⚠️ **与上面不是同一套。** 官方把半双工收发电路集成在 HAT 上；本路线用现成的 OpenRB-150 经 USB 接主控，IMU 另走 I²C。
+### 本路线的总线拓扑
 
 ```mermaid
 graph LR
-    PI[Raspberry Pi Zero 2 W<br/>跑控制程序] -->|USB| RB[ROBOTIS OpenRB-150<br/>总线适配器<br/>供电 3.7-12.6V]
-    PI -->|I²C GPIO2/3| IMU[BNO08x IMU]
-    RB -->|JST EHR-03<br/>单线半双工 TTL 1Mbps| S1[id 1-5<br/>右腿]
-    RB --> S2[id 6-10<br/>左腿]
-    RB --> S3[id 11-14<br/>头颈]
-    BAT[成品 6V 电池] --> SW[电源开关] --> RB
-    BAT --> REG[5V 稳压] --> PI
-    classDef n fill:#1f6feb,color:#fff
-    class RB n
+    R[robotd 控制线程<br/>Radxa Zero 3W] -->|serialport · TIOCEXCL| T["/dev/ttyS2<br/>1 Mbps · 单线半双工"]
+    T --> HAT["RPI Robot HAT<br/>收发 · 配电"]
+    HAT --> A["id 200<br/>imu_to_dxl v2<br/>⚠️ 未验证"]:::warn
+    HAT --> B["id 20-24<br/>左腿 5 舵机"]
+    HAT --> C["id 30-34<br/>颈 · 头 · 嘴 5 舵机"]
+    HAT --> D["id 10-14<br/>右腿 5 舵机"]
+    classDef warn fill:#f8d7da,stroke:#c00
 ```
 
-与官方拓扑的三处关键差异：
+**IMU 排在 id 向量第一位**，与 15 个舵机在**同一次 `sync_read`** 里读出 —— `imu_to_dxl` 板挂在总线上，从舵机应答的同一段寄存器里吐出片内 SFLP 四元数。一块板、一条代码路径、没有 IMU 抽象层。
 
-| | 官方 | 本路线 |
-|---|---|---|
-| 总线适配器 | 集成在自制 HAT 上 | **现成的 OpenRB-150**，零自制 PCB |
-| IMU 挂在哪 | Dynamixel 总线上（id 200，与舵机同一次 `sync_read`） | **独立 I²C**，与舵机总线无关 |
-| 舵机 ID | 左腿 20–24 / 颈头嘴 30–34 / 右腿 10–14 | **1–14 顺序编号**，无嘴 |
+### 飞特带来的三处硬件差异
 
-⚠️ 两套 ID 表**不通用**。完整的路线对比见 `../docs/ecosystem.md`。
+| | 官方 XL330 | 本路线 HD-1910 | 影响 |
+|---|---|---|---|
+| **接头间距** | 2.5mm | **2.0mm** | `imu_to_dxl` 板上 J4/J5 是 2.0 的座子，两套并存 |
+| **脚序** | `1=GND / 2=Vcc / 3=Signal` | **完全相反** | ⚠️ **接错电源脚会烧。** 好在间距不同插不进对方，只剩"自己压线时压反"这一种可能 —— 压完先用万用表点一遍 |
+| **舵盘** | 凹 | **凸** | ⚠️ **8 个配合件要改模重打**。fanhao375 已出飞特版 SolidWorks 图纸（`-FT` 后缀）与一键打印 |
+
+⚠️ **电压零余量。** HD-1910 工作范围 4–8.4V，NP-F550 满电正好 8.4V。带载压降到 6.6–8.2V 才回到安全区 —— **刚充满别直接堵转测试**，装机前把舵机的过压保护打开（出厂默认关闭）。
+
+⚠️ **串口控制台会抢总线。** Armbian 默认在 UART2 上跑登录控制台，`agetty` 占着口会让所有舵机对其他进程**完全不可见**。官方 `setup-board.sh` 屏蔽了这个 unit；`fuser -v /dev/ttyS2` 查"谁占着总线"。
 
 ## 目录地图
 

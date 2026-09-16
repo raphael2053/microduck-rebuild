@@ -51,4 +51,6 @@ RPI Robot HAT 按官方文件打样；`imu_to_dxl` 审查社区重建原理图�
 
 社区复刻项目的导航、核实状态与可用之处，见 [../docs/ecosystem.md](../docs/ecosystem.md)。
 
-**路线已定：走 AI-FanGe 路线**，理由与执行计划见 [../docs/roadmap.md](../docs/roadmap.md)。这条路线零自制 PCB，本目录原先列的三大难点里，`imu_to_dxl` 与线束两项**直接消失**，只剩结构件打印。
+**路线已定：走 fanhao375 路线**（飞特 HD-1910），理由与执行计划见 [../docs/roadmap.md](../docs/roadmap.md)。
+
+⚠️ 这条路线**两块板都要自己打样**，本目录列的三大难点一个都没少 —— `imu_to_dxl`（社区重建、从未流片验证）是全项目风险最高的单点。另外飞特舵盘凹凸与 XL330 相反，**8 个配合件要改模**。

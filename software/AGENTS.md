@@ -2,9 +2,9 @@
 
 ## 产品
 
-控制栈与 RL 训练线。上游是 Apache-2.0 真开源，所以这里的工作是**吃透与改造**，不是逆向。
+控制栈与 RL 训练线。跑官方 Rust 栈（Apache-2.0），所以这里的工作是**吃透、改造、重训**，不是逆向。
 
-这条线**不依赖硬件线**：上游 `scripts/duck-sim` 让真实 daemon 跑在 MuJoCo 的身体上，无实机也能完整推进。阶段规划见 `README.md`，此处不重复。
+这条线**不依赖硬件线**：官方 `scripts/duck-sim` 让真实 daemon 跑在 MuJoCo 的身体上，无实机也能完整推进。阶段规划见 `README.md`，此处不重复。
 
 ## 技术
 
@@ -21,91 +21,65 @@
 
 ## 结构
 
-整机的 daemon 拓扑见根 `AGENTS.md`，此处不重复；下面是 `robotd` 内部与两个状态机。
-资料源为上游 `docs/design/robotd-design.md` 与 `updater-design.md`。
+**整机软件架构、`robotd` 内部数据流、50Hz tick 时序、上电使能与更新回滚状态机 —— 全部在 [../docs/architecture.md](../docs/architecture.md)。** 那是完整参考，本节不重复，只讲**本路线要动的地方**。
 
-### `robotd` 内部（C4 L3）
+### 换飞特带来的三处改动
 
-一个进程、一条串口总线、一个 50 Hz 环。环读全部 16 个设备（**一次** `sync_read`），算出 15 个关节目标，写回去。其余一切都挂在环外，不能阻塞它。
+官方栈的七个 daemon 原样跑，改动集中在 `robotd` 内部这三处：
 
 ```mermaid
 graph TB
-    BUS[(Dynamixel 总线<br/>id 200 IMU + 15 舵机)] -->|一次 sync_read| SENS[Sensors<br/>关节 · IMU]
-    SENS --> SAFEOBS[safety.observe<br/>跌倒判定 · 去抖]
-    SENS --> OBS[Observation::build]
-    INTENT[意图快照<br/>twist · head · body] -->|gate deadman| OBS
-    OBS -->|f32 x 61| POL[Policy::infer<br/>仲裁顺序见下]
-    POL -->|f32 x 14<br/>不含嘴| MAP[home pose + scale x action<br/>头与腿低通滤波]
-    MAP -->|f64 x 15| SAFE[safety.apply<br/>独占 RobotIo]
-    SAFE -->|一次 sync_write| BUS
-    SAFEOBS -.->|只上报，不拦截| PUB[robot.health / robot.state]
-    classDef s fill:#1f6feb,color:#fff
-    class SAFE s
+    subgraph KEEP["原样不动"]
+        A[configd · updaterd · btd<br/>padd · mediad · tofd]
+        B[JSON-RPC 契约 · 50Hz 环<br/>安全层 · 上电状态机]
+    end
+    subgraph CHG["要改"]
+        P1["① 总线协议模块<br/>Dynamixel v2 → 飞特 STS"]:::c
+        P2["② policy 权重<br/>官方 9 个 ONNX 全部作废"]:::c
+        P3["③ 执行器模型参数<br/>BAM 按 HD-1910 重新标定"]:::c
+    end
+    P1 --> BUS[(舵机总线)]
+    P3 --> P2
+    classDef c fill:#f8d7da,stroke:#c00
 ```
 
-⚠️ **跌倒判定只上报，不拦截任何东西。** `safety.apply` 做的是拒绝非有限值、钳到行程范围 —— 没有跌倒门。
+**① 协议模块。** 飞特走 STS 不是 Dynamixel v2。`rustypot` 导出了 `Sts3215PyController` / `Scs0009PyController`，但 **⚠️ 没有 HD-1910 的类**，能否复用 STS 协议未验证 —— 这是本线的第一个待验证项。
 
-**policy 仲裁顺序**（先到先得）：`roulade` > `kick` > `ground pick` > `sit/rise` > `stand`（按 |twist| 或强制）> `walk`。
+**② 策略重训。** 官方 9 个 ONNX 是在 XL330 的动力学上训出来的。⚠️ 阶段 0 已用实验确认：**接口相容不等于可用**（见 `POSTMORTEM.md`）。换执行器必须重训。
 
-### 一个 tick 的时序
+**③ 执行器模型。** 训练时 MuJoCo 里的舵机行为由 BAM 模型描述，参数是在 XL330 上辨识出来的。HD-1910 力矩 2.5 倍、减速比 1/320（XL330 是 288.4:1）、虚位 ≤0.5°（XL330 建模 ±1.0°），**必须重新标定**，其中部分项要台架实测。fanhao375 提供了《HD-1910 训练前数据清单》。
 
-```mermaid
-sequenceDiagram
-    participant L as 控制环 50Hz
-    participant B as Dynamixel 总线
-    participant P as Policy
-    participant S as safety
-    L->>B: sync_read（IMU + 15 舵机，寄存器 124-136）
-    B-->>L: 关节位置/速度 · IMU 四元数
-    L->>L: Observation::build（61 维）
-    L->>P: infer
-    P-->>L: 14 维动作
-    L->>S: apply(targets, hold, gain)
-    S->>B: sync_write 目标位置
-    L->>L: publish：原子量总是发，state 帧仅在有订阅时发
-    Note over L,B: 每 1 秒额外一次 slow_sensors()<br/>寄存器 144-146：电压 + 温度
-```
+### 状态机：策略从训练到上机
 
-`tokio` 的 `interval` 用 **`MissedTickBehavior::Skip`** —— `Burst` 会把积压的 tick 连发、把电机指令摞在一起；`Delay` 会让每次唤醒延迟累加进周期，环比配置的频率越跑越慢。
-
-### 状态机一：上电与使能
-
-**`robotd` 从不自己让机器人动。** 启动时读当前位置、把它当作目标、不碰扭矩 —— 所以更新重启时站着的机器人会继续站着。
+本线特有的流程，官方文档没有这一段。
 
 ```mermaid
 stateDiagram-v2
-    [*] --> Limp: 进程启动<br/>读当前位姿作为 hold
-    Limp --> Homing: robot.enable / robot.init<br/>（需 policy 已加载 + 有新鲜采样）
-    Homing --> Ready: 扭矩开 · 2 秒斜坡
-    Ready --> Limp: robot.relax<br/>（同时清除 enabled）
-    Ready --> Ready: policy 驱动
-    note right of Limp: 重启后落在这里<br/>不请求扭矩
+    [*] --> 标定: 台架实测 HD-1910
+    标定 --> 建模: 写进 joints_properties.xml<br/>BAM 参数
+    建模 --> 训练: mjlab PPO @50Hz<br/>CUDA GPU 或 HF Jobs
+    训练 --> 导出: scripts/export.py → ONNX<br/>观测归一化烘进计算图
+    导出 --> 仿真验证: infer_policy.py<br/>看站得住走得动
+    仿真验证 --> 训练: 不达标，调奖励或续训
+    仿真验证 --> 上机: 达标
+    上机 --> 标定: sim2real 差距过大<br/>回头补标定
+    上机 --> [*]: 走起来了
+    note right of 导出: ⚠️ 必须用 export.py<br/>手工转 checkpoint 会漏掉归一化
 ```
 
-`driving` 需要**四个条件同时成立**：`enabled` ∧ `policy 已加载` ∧ `本 tick 有传感器数据` ∧ `¬limp-fall`。其中"本 tick 有传感器数据"最不显然 —— 读失败就没有东西能拼观测，编一个等于喂给 policy 一台不存在的机器人。
+⚠️ **别手工转 checkpoint。** 观测归一化被烘进 ONNX 计算图（`Sub` / `Div` 算子），手工转的会让策略在运行时看到未归一化的观测。
 
-状态切换的边沿各有动作：**开始驱动** → `controller.reset()`（否则陈旧的上次动作会表现为一次抽搐）；**停止驱动** → 抓一次当前位姿存为 `hold`（每 tick 重读会因重力下垂）。
+### policy 接口契约
 
-### 状态机二：更新与回滚
+| | |
+|---|---|
+| 观测 | **61 维** = 角速度3 + 重力投影3 + 关节位置14 + 关节速度14 + 上次动作14 + **指令块13** |
+| 动作 | **14 维**，不含嘴 |
+| 频率 | 50 Hz |
 
-```mermaid
-stateDiagram-v2
-    [*] --> PREFLIGHT: check / apply(version)
-    PREFLIGHT --> 失败: 单飞锁 / 时钟 / 机器人未停 / 磁盘
-    PREFLIGHT --> 校验: 取 manifest → 验签 → 比版本
-    校验 --> 失败: 不兼容 / 无事可做
-    校验 --> 下载: 下载 → 校验 sha256 → 验签
-    下载 --> 解包: 解到 releases 的临时目录<br/>孤儿单元检查
-    解包 --> 切换: 原子换符号链接 current
-    切换 --> 健康门: 重启单元 → 轮询 robot.health
-    健康门 --> 成功: healthy 或 degraded
-    健康门 --> 回滚: 不健康 / 超时 / hook 失败
-    回滚 --> 失败: 换回旧链接，重新应用
-    成功 --> [*]
-    失败 --> [*]
-```
+⚠️ 出厂策略是 61 维（13 维指令块）。旧格式是 51 维（3 维指令块），`infer_policy.py` 用 `--new-cmd-obs` 切换。重训时按哪种格式要先定。
 
-⚠️ **`degraded` 也提交，不回滚。** 理由是没有舵机供电的 `robotd` 在旧版上一样失败 —— 在这里回滚等于把硬件故障藏在一次软件变更后面，还会连带把下一个版本也回滚掉。
+实机有 **15 个电机 ID**，第 15 个是嘴（`JOINT_NAMES[9] = "mouth"`），不进动作空间。
 
 ## 目录地图
 
@@ -120,6 +94,6 @@ stateDiagram-v2
 
 **不要 vendor 上游代码。** 本仓根与上游同为 Apache-2.0，复制本身不构成许可冲突，但会丢失来源追溯、让上游更新难以合并。接入方式（submodule / fork / 脚本拉取）**尚未决定** —— 需要引用上游代码时先问，不要擅自选一种并落盘。确实要引入时，须保留上游 LICENSE 与版权声明，并按 Apache-2.0 第 4 条标注改动。
 
-**不要假设 61 维观测的构成。** 各分量（关节位置/速度/IMU/指令）的切分与顺序尚未摸清，而这直接决定自制硬件的传感器布局能否复用出厂 policy。要用到时去读上游源码确认，别推测。
+**换执行器就要重训，没有例外。** 阶段 0 用实验证过：策略权重编码的是它训练时那具身体的动力学，维度对得上只说明能加载。见 `POSTMORTEM.md` 第二条。
 
 **读源码是回答硬件问题的手段。** `../docs/open-questions.md` 里有几个卡 BOM 的问题（IMU 数量、第 15 个电机）标注了"核实途径"，都指向上游源码。查到结论后回填 `../docs/`，并标注来源与日期。

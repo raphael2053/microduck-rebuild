@@ -15,7 +15,9 @@ Microduck 的**软件是真开源**（Apache-2.0），**硬件不是**。所以"
 
 看 **[docs/roadmap.md](docs/roadmap.md)** —— 分七个阶段，从零成本的仿真验证到实机走路，每阶段有完成判据。
 
-路线已定：**走 AI-FanGe 路线**。理由是它被证明走通了（有实机行走视频），而且零自制 PCB —— 把本项目排名第一和第二的阻塞项整个删掉了。
+路线已定：**走 fanhao375 路线**（飞特 HD-1910）。跑官方 Rust 栈，舵机换国产，两块板自己打样。
+
+原先选的 AI-FanGe 路线因 XL330 供货（Seeed 需 4–6 周、淘宝涨到 ¥700+）被推翻。⚠️ 代价是这条路线**没有人走通过**，且策略要全部重训。
 
 ## 当前状态
 
@@ -39,7 +41,8 @@ Microduck 的**软件是真开源**（Apache-2.0），**硬件不是**。所以"
 
 ## 文档
 
-- [docs/roadmap.md](docs/roadmap.md) —— **复刻路线图**：路线决定、七个阶段、风险清单
+- [docs/roadmap.md](docs/roadmap.md) —— **复刻路线图**：路线决定、九个阶段、风险清单
+- [docs/architecture.md](docs/architecture.md) —— 官方架构完整参考：C4 图、状态机、时序图
 - [docs/dictionary.md](docs/dictionary.md) —— **术语表**：给软件工程师看的机器人硬件词典，看不懂别的文档时先来这里
 - [docs/upstream.md](docs/upstream.md) —— 上游官方事实：开源边界、许可证
 - [docs/ecosystem.md](docs/ecosystem.md) —— 生态导航：社区复刻项目与两条路线对比
