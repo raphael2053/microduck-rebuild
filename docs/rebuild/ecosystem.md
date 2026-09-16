@@ -4,7 +4,7 @@ Microduck 生态里值得跟的项目。**这是导航，不是清单** —— �
 
 完整的生态索引见上游的 `joeynyc/awesome-microduck`（100+ 项目），这里不复制。
 
-本文件出现的硬件术语，解释见 [dictionary.md](dictionary.md)。
+本文件出现的硬件术语，解释见 [dictionary.md](../dictionary.md)。
 
 收录标准：已直接查阅过仓库内容（不是只看检索摘要），且能说出对本项目的具体用处。未核实的放在最后一节，不与已核实条目混排。
 

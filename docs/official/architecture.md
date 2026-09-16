@@ -1,10 +1,12 @@
-# 官方架构参考（完整版）
+# 官方架构（C4 · 状态机 · 时序）
 
-Microduck 官方整机的架构、状态机与时序。**本项目跑的就是这套软件** —— fanhao375 路线用的是官方 Rust 栈，差异只在舵机型号与两块自制板，见 [ecosystem.md](ecosystem.md) 的路线对比。
+Microduck 官方整机的架构、状态机与时序。同目录还有 [README.md](README.md)（一页纸概览，**没读过先读它**）、[stack.md](stack.md)（技术栈）、[hardware.md](hardware.md)（硬件清单）。
 
-资料源为上游 `pollen-robotics/microduck` 的 `docs/design/`：`architecture.md`、`robotd-design.md`、`updater-design.md`。调研日期 2026-09-15。
+**资料源**：上游 `pollen-robotics/microduck` 的 `docs/design/`（`architecture.md`、`robotd-design.md`、`updater-design.md`），另有若干条已回到源码核对。核对日期 2026-09-16。
 
-各 AGENTS.md 里放的是**本项目视角的精简版**，本文是完整参考 —— 需要细节时查这里。
+⚠️ 本文多数内容来自官方**设计文档**而非逐行核对源码。已回源码核实的几条：`JOINT_NAMES` 是 15 元数组且 `mouth` 在索引 9（`duck-ipc-proto/src/lib.rs:436`）、串口是 `/dev/ttyS2`、控制频率 50 Hz（`robotd-params`）、舵机走 `Xl330Controller`（`duck-control/src/bus.rs:18`）。
+
+本项目（fanhao375 路线）跑的就是这套软件，差异只在舵机型号与两块自制板 —— 见 [../rebuild/ecosystem.md](../rebuild/ecosystem.md)。
 
 ---
 

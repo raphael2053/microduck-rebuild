@@ -58,7 +58,7 @@ graph TB
     classDef delta fill:#d1ecf1,stroke:#0c5460
 ```
 
-**完整的官方架构、状态机与时序见 [docs/architecture.md](docs/architecture.md)** —— 七个 daemon 的职责分工、`robotd` 内部数据流、50Hz tick 时序、上电使能状态机、更新回滚状态机。本项目跑的就是那套软件，本节只放顶层视图。
+**官方原版的完整资料见 [docs/official/](docs/official/README.md)** —— 一页纸概览、技术栈、C4/状态机/时序、硬件清单 —— 七个 daemon 的职责分工、`robotd` 内部数据流、50Hz tick 时序、上电使能状态机、更新回滚状态机。本项目跑的就是那套软件，本节只放顶层视图。
 
 各线的细节图在 [software/AGENTS.md](software/AGENTS.md) 与 [hardware/AGENTS.md](hardware/AGENTS.md)。
 
@@ -76,7 +76,9 @@ graph TB
 
 | 目录 | 用途 | 自有 AGENTS.md |
 |---|---|---|
-| `docs/` | 事实基线。`architecture.md` 是官方架构完整参考（状态机/时序全版）；`roadmap.md` 是执行计划与路线决定；`dictionary.md` 是术语表；`upstream.md` 只管上游官方事实；`ecosystem.md` 是社区项目的**唯一归属地**，别在两处重复记录；`hardware.md` 是已知规格；`open-questions.md` 按**阻塞程度**排序、不是追加序，插入新条目要重排。 | 无 |
+| `docs/official/` | **官方原版**的事实基线。`README.md` 是一页纸概览（先读它）；`stack.md` 技术栈；`architecture.md` C4/状态机/时序；`hardware.md` 硬件清单；`licensing.md` 开源边界与许可证。⚠️ 证据分三级标注：✅ 源码实证 / 📄 设计文档 / 🔍 社区逆向 | 无 |
+| `docs/rebuild/` | **本项目复刻方案**。`roadmap.md` 执行计划；`ecosystem.md` 社区项目的**唯一归属地**；`open-questions.md` 按**阻塞程度**排序、不是追加序 | 无 |
+| `docs/dictionary.md` | 术语表，两边共用 | 无 |
 | `software/` | 控制栈与 RL 训练线。`POSTMORTEM.md` 记排查过的坑，排查前先扫 | `software/AGENTS.md` |
 | `hardware/` | 机械与电子线 | `hardware/AGENTS.md` |
 | `tools/` | `checks/` 是校验脚本（L5），`hooks/` 是拦截脚本（L4）。 | 无 |

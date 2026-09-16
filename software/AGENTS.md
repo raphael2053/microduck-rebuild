@@ -21,7 +21,7 @@
 
 ## 结构
 
-**整机软件架构、`robotd` 内部数据流、50Hz tick 时序、上电使能与更新回滚状态机 —— 全部在 [../docs/architecture.md](../docs/architecture.md)。** 那是完整参考，本节不重复，只讲**本路线要动的地方**。
+**整机软件架构、`robotd` 内部数据流、50Hz tick 时序、上电使能与更新回滚状态机 —— 全部在 [../docs/architecture.md](../docs/official/architecture.md)。** 那是完整参考，本节不重复，只讲**本路线要动的地方**。
 
 ### 换飞特带来的三处改动
 

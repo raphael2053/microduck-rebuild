@@ -21,7 +21,7 @@
 
 ## 结构
 
-整机的总线归属、`robotd` 与硬件的交互见 [../docs/architecture.md](../docs/architecture.md)。本节只讲**本路线的硬件形态**。
+整机的总线归属、`robotd` 与硬件的交互见 [../docs/architecture.md](../docs/official/architecture.md)。本节只讲**本路线的硬件形态**。
 
 ### 自制与采购的分界
 

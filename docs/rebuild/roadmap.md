@@ -75,13 +75,13 @@ cd ~/Workspace/opensource/microduck_rl && uv run mjpython scripts/infer_policy.p
 
 **完成判据**：屏幕上的鸭子能走。✅
 
-排查过程与两条 postmortem 见 [../software/POSTMORTEM.md](../software/POSTMORTEM.md)。
+排查过程与两条 postmortem 见 [../../software/POSTMORTEM.md](../../software/POSTMORTEM.md)。
 
 ---
 
 ## 阶段 1 · 下单与 PCB 打样
 
-完整清单见 **[../hardware/bom.md](../hardware/bom.md)**。
+完整清单见 **[../../hardware/bom.md](../../hardware/bom.md)**。
 
 两件事**同时启动**，都是关键路径：
 
@@ -161,7 +161,7 @@ ID 映射：左腿 20–24 / 颈头嘴 30–34 / 右腿 10–14。
 
 ## 阶段 7 · 策略重训
 
-本路线独有的大块工作。流程与状态机见 [../software/AGENTS.md](../software/AGENTS.md)。
+本路线独有的大块工作。流程与状态机见 [../../software/AGENTS.md](../../software/AGENTS.md)。
 
 1. **台架实测** HD-1910 的执行器参数（fanhao375 提供了《HD-1910 训练前数据清单》，标明哪些项要实测）
 2. 写进 `joints_properties.xml` 的 BAM 参数

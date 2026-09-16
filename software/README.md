@@ -14,7 +14,7 @@
 目标产出：一条从 policy 文件到仿真里迈步的完整可复现路径。
 
 ### 阶段二：摸清接口
-把 JSON-RPC 契约、50 Hz 控制环、policy 的 61 维观测构成写成文档。这些是自制硬件能不能复用出厂 policy 的前提 —— 见 [../docs/open-questions.md](../docs/open-questions.md)。
+把 JSON-RPC 契约、50 Hz 控制环、policy 的 61 维观测构成写成文档。这些是自制硬件能不能复用出厂 policy 的前提 —— 见 [../docs/open-questions.md](../docs/rebuild/open-questions.md)。
 
 ### 阶段三：自己训
 搭起 RL 训练环境，从零训一个步态出来。上游称 4096 并行环境下约 1–2 小时可得可用步态，但需要 CUDA GPU。
@@ -42,4 +42,4 @@
 - `pollen-robotics/microduck_rl` —— RL 训练环境，Apache-2.0
 - Hugging Face Hub `microduck-policies` —— 9 个出厂 ONNX policy
 
-详见 [../docs/upstream.md](../docs/upstream.md)。
+详见 [../docs/upstream.md](../docs/official/licensing.md)。

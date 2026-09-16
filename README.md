@@ -9,11 +9,11 @@ Microduck 的**软件是真开源**（Apache-2.0），**硬件不是**。所以"
 - **软件线** —— 不是逆向，是吃透并改造。上游 Rust 控制栈和 RL 训练环境可以直接用。
 - **硬件线** —— 这才是真正的逆向工程。官方未发布机械/电子生产文件。
 
-详见 [docs/upstream.md](docs/upstream.md) 的开源边界分析。
+详见 [docs/upstream.md](docs/official/licensing.md) 的开源边界分析。
 
 ## 下一步做什么
 
-看 **[docs/roadmap.md](docs/roadmap.md)** —— 分七个阶段，从零成本的仿真验证到实机走路，每阶段有完成判据。
+看 **[docs/roadmap.md](docs/rebuild/roadmap.md)** —— 分七个阶段，从零成本的仿真验证到实机走路，每阶段有完成判据。
 
 路线已定：**走 fanhao375 路线**（飞特 HD-1910）。跑官方 Rust 栈，舵机换国产，两块板自己打样。
 
@@ -41,13 +41,13 @@ Microduck 的**软件是真开源**（Apache-2.0），**硬件不是**。所以"
 
 ## 文档
 
-- [docs/roadmap.md](docs/roadmap.md) —— **复刻路线图**：路线决定、九个阶段、风险清单
-- [docs/architecture.md](docs/architecture.md) —— 官方架构完整参考：C4 图、状态机、时序图
+- [docs/roadmap.md](docs/rebuild/roadmap.md) —— **复刻路线图**：路线决定、九个阶段、风险清单
+- [docs/architecture.md](docs/official/architecture.md) —— 官方架构完整参考：C4 图、状态机、时序图
 - [docs/dictionary.md](docs/dictionary.md) —— **术语表**：给软件工程师看的机器人硬件词典，看不懂别的文档时先来这里
-- [docs/upstream.md](docs/upstream.md) —— 上游官方事实：开源边界、许可证
-- [docs/ecosystem.md](docs/ecosystem.md) —— 生态导航：社区复刻项目与两条路线对比
-- [docs/hardware.md](docs/hardware.md) —— 已知硬件规格
-- [docs/open-questions.md](docs/open-questions.md) —— 未知项与待验证清单
+- [docs/upstream.md](docs/official/licensing.md) —— 上游官方事实：开源边界、许可证
+- [docs/ecosystem.md](docs/rebuild/ecosystem.md) —— 生态导航：社区复刻项目与两条路线对比
+- [docs/hardware.md](docs/official/hardware.md) —— 已知硬件规格
+- [docs/open-questions.md](docs/rebuild/open-questions.md) —— 未知项与待验证清单
 
 ## 许可证
 
@@ -56,4 +56,4 @@ Microduck 的**软件是真开源**（Apache-2.0），**硬件不是**。所以"
 - **仓库根** —— [Apache-2.0](LICENSE)，与上游代码同证
 - **`hardware/`** —— [CC BY-NC-SA 4.0](hardware/LICENSE)，因为衍生自官方 3D 模型，ShareAlike 强制继承
 
-事实性内容（尺寸、型号、BOM 数量、测量数据、文字描述）不构成衍生作品，一律适用 Apache-2.0。详见 [docs/upstream.md](docs/upstream.md#许可证约束)。
+事实性内容（尺寸、型号、BOM 数量、测量数据、文字描述）不构成衍生作品，一律适用 Apache-2.0。详见 [docs/upstream.md](docs/official/licensing.md#许可证约束)。

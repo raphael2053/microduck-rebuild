@@ -8,7 +8,7 @@
 
 ## 三个难点
 
-按风险排序，详见 [../docs/open-questions.md](../docs/open-questions.md)：
+按风险排序，详见 [../docs/open-questions.md](../docs/rebuild/open-questions.md)：
 
 1. **结构件公差** —— 仿真 STL 不是制造文件，直接打印装不上
 2. **`imu_to_dxl` 板** —— 官方未发布，社区重建版从未流片验证
@@ -41,7 +41,7 @@ RPI Robot HAT 按官方文件打样；`imu_to_dxl` 审查社区重建原理图�
 
 本目录采用 [CC BY-NC-SA 4.0](LICENSE)，与仓库根目录的 Apache-2.0 不同。原因是从官方 MJCF/STL 衍生的 CAD 受 ShareAlike 条款强制继承。
 
-受约束的只有衍生几何。尺寸、型号、BOM 数量、独立测量与文字描述属于事实，不构成衍生作品，适用根目录的 Apache-2.0。见 [../docs/upstream.md](../docs/upstream.md#许可证约束)。
+受约束的只有衍生几何。尺寸、型号、BOM 数量、独立测量与文字描述属于事实，不构成衍生作品，适用根目录的 Apache-2.0。见 [../docs/upstream.md](../docs/official/licensing.md#许可证约束)。
 
 ## 看不懂术语
 
@@ -49,8 +49,8 @@ RPI Robot HAT 按官方文件打样；`imu_to_dxl` 审查社区重建原理图�
 
 ## 参考
 
-社区复刻项目的导航、核实状态与可用之处，见 [../docs/ecosystem.md](../docs/ecosystem.md)。
+社区复刻项目的导航、核实状态与可用之处，见 [../docs/ecosystem.md](../docs/rebuild/ecosystem.md)。
 
-**路线已定：走 fanhao375 路线**（飞特 HD-1910），理由与执行计划见 [../docs/roadmap.md](../docs/roadmap.md)。
+**路线已定：走 fanhao375 路线**（飞特 HD-1910），理由与执行计划见 [../docs/roadmap.md](../docs/rebuild/roadmap.md)。
 
 ⚠️ 这条路线**两块板都要自己打样**，本目录列的三大难点一个都没少 —— `imu_to_dxl`（社区重建、从未流片验证）是全项目风险最高的单点。另外飞特舵盘凹凸与 XL330 相反，**8 个配合件要改模**。
