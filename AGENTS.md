@@ -99,6 +99,8 @@ graph TB
 
 **语言：以中文为主。** 文档、注释、commit message 用中文书写，但**专业名词保持英文原文，不做翻译** —— harness、MuJoCo、BOM、policy、daemon、ONNX、submodule、ShareAlike、sim2real 等一律用原文。中文承担叙述，英文承担术语。
 
+**所有改动走 PR，禁止直接提交或推送到 `main`。** 开分支 → 提交 → 推分支 → `gh pr create`。分支名用 `<type>/<描述>`（`docs/`、`feat/`、`fix/`、`chore/`）。这条**由 L4 hook 强制**（`tools/hooks/no-direct-main.py`），拦在 main 上 commit 与向 main push 两类动作。
+
 **Commit。** Conventional Commits 前缀（`docs:`、`chore:` 等）+ 正文说明动机而非罗列改动 + 尾注 `Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>`。
 
 **MCP 用个人 workspace。** 本机有两个 Linear MCP，本项目只允许 `mcp__linear-personal__*`，`mcp__linear-company__*` 禁止使用。详见 `CLAUDE.md`。这条**由 L4 hook 强制**（`tools/hooks/linear-guard.py`），不是靠自觉 —— 它同时校验 Linear 条目是否建在 `microduck-rebuild`（MDR）team 下。
