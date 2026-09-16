@@ -10,6 +10,107 @@
 
 ---
 
+## 〇、硬件总览 —— 先看这张
+
+⚠️ **下面每一行是一个「可以单独买到或做出来」的实体**，不是功能块。整机就这 11 样。
+
+| # | 部件 | 数量 | 装在哪 | 怎么来 | 干什么 |
+|---|---|---|---|---|---|
+| 1 | **Radxa Zero 3W** | 1 | 头 | 🛒 买 | 主控。跑 Linux、7 个 daemon、神经网络、视觉 |
+| 2 | **RPI Robot HAT** | 1 | 头，叠在主控上方 7.3mm | 🏭 **打样** | 配电 + 音频 + 舵机总线收发。✅ 官方开源 KiCad |
+| 3 | **`imu_to_dxl` 板** | 1 | 躯干 | ✏️ **自画 + 打样** | 把 IMU 伪装成总线上的第 16 个设备。❌ 官方从未发布 |
+| 4 | **Dynamixel XL330 舵机** | **15** | 腿 10、颈头嘴 5 | 🛒 买 | 15 个关节。**整机成本大头** |
+| 5 | **IMX219 摄像头 + M12 镜头** | 1 | 头 | 🛒 买 | 眼睛。⚠️ 转 90° 安装 |
+| 6 | **ToF 模组**（VL53L8CX） | 1 | 头 | 🛒 买 | 8×8 区测距。⚠️ 不是激光雷达 |
+| 7 | **喇叭** | 1 | 头 | 🛒 买 | 发声。经 HAT 上的功放驱动 |
+| 8 | **NP-F550 电池** | 1 | 机身后下方，外挂 | 🛒 买 | 供电。2S，6.6–8.4V |
+| 9 | **微型轴承** | 14 | 关节处 | 🛒 买 | 转动支撑。11× Ø22×16×4 + 3× Ø15×10×3 |
+| 10 | **M2 紧固件** | ~325 | 全身 | 🛒 买 | 固定 |
+| 11 | **3D 打印结构件** | ~47 种 | 全身 | 🖨️ 打印 | 骨架与外壳 |
+
+**要自己做的只有三样**：HAT 打样、`imu_to_dxl` 打样、结构件打印。其余全是买现成的。
+
+### ⚠️ 别把「芯片」当成「要买的件」
+
+本文后面会出现 `AP63205`、`TLV320AIC3104`、`PAM8406`、`LM5050-1`、`SIT3088`、`BMI088` 这些型号 —— **它们全都是 HAT 板上的贴片芯片**，属于上表第 2 行的一部分，不是另外 6 个要单独采购的东西。
+
+打样 HAT 时这些器件会跟着 BOM 一起贴上去；你不会单独买它们。同理 `imu_to_dxl` 板上的 `STM32G031`、`LSM6DSV16X`、`SN74LVC2G241` 也属于第 3 行。
+
+---
+
+## 〇之二、物理布局
+
+```mermaid
+graph TB
+    subgraph HEAD["🔵 头部 —— MJCF 里叫 jaw_soft，内部无关节"]
+        direction TB
+        RADXA["① Radxa Zero 3W<br/>65×30mm"]
+        HAT["② RPI Robot HAT<br/>叠在上方 7.3mm"]
+        CAM["⑤ IMX219 摄像头<br/>距主控中心约 13mm"]
+        TOF["⑥ ToF 模组"]
+        SPK["⑦ 喇叭"]
+        RADXA --- HAT
+    end
+    subgraph NECK["🟡 颈 · 头 · 嘴 —— 5 个舵机"]
+        NS["④ neck_pitch · head_pitch<br/>head_yaw · head_roll · mouth"]
+    end
+    subgraph TRUNK["🟢 躯干 —— trunk_base"]
+        HIP["④ 两颗 hip_yaw 舵机<br/>内腔基本被占满"]
+        IMU["③ imu_to_dxl 板"]
+    end
+    subgraph LEGS["🟠 双腿 —— 各 5 个舵机"]
+        LL["④ 左腿 hip_roll/pitch<br/>knee · ankle"]
+        RL["④ 右腿 同左"]
+    end
+    BAT["⑧ NP-F550 电池<br/>外挂，71mm 长<br/>约 40mm 悬在壳外"]
+    HEAD --- NECK --- TRUNK
+    TRUNK --- LL & RL
+    TRUNK -.外挂.- BAT
+    classDef h fill:#dbeafe
+    classDef n fill:#fef3c7
+    classDef t fill:#dcfce7
+    classDef l fill:#fed7aa
+    class HEAD h
+    class NECK n
+    class TRUNK t
+    class LEGS l
+```
+
+⚠️ **穿过脖子的只有两样**：舵机总线（1 对线）与电池供电线。**摄像头排线不过脖子** —— 摄像头与主控同在头部这一个刚体里，中间没有关节，所以 MIPI 排线买最短的就够。
+
+真正的线束疲劳风险在**过颈的那两样**上 —— 那是承流线，比信号排线更值得重视。⚠️ 官方**没有公开任何走线资料**。
+
+---
+
+## 〇之三、电气连接
+
+```mermaid
+graph TB
+    BAT["⑧ NP-F550 电池<br/>6.6-8.4V"]
+    BAT -->|"+BATT 直供，不降压"| TRX["HAT：半双工收发电路"]
+    BAT -->|+BATT| BUCK["HAT：AP63205 降压"]
+    BUCK -->|+5V| RADXA["① Radxa Zero 3W"]
+    BUCK -->|+5V| AUDIO["HAT：codec + 功放"]
+    AUDIO --> SPK["⑦ 喇叭"]
+    RADXA -->|"/dev/ttyS2 · 1Mbps"| TRX
+    RADXA -->|MIPI CSI| CAM["⑤ IMX219 摄像头"]
+    RADXA -->|"I²C（经 HAT 的 Stemma 口）"| TOF["⑥ ToF 模组"]
+    TRX -->|单线半双工总线| S1["③ imu_to_dxl · id 200"]
+    TRX --> S2["④ 左腿 id 20-24"]
+    TRX --> S3["④ 颈头嘴 id 30-34"]
+    TRX --> S4["④ 右腿 id 10-14"]
+    classDef hat fill:#fff3cd,stroke:#d39e00
+    class TRX,BUCK,AUDIO hat
+```
+
+**三条要看懂的**：
+
+1. **舵机吃的是电池原压，不是 5V。** ⚠️ 电池 `+BATT` 直接接到舵机接口，板上唯一的降压（AP63205）输出的 5V 是给主控的 —— 这就是 XL330 超压运行的来源。
+2. **一条总线挂 16 个设备。** 15 个舵机 + `imu_to_dxl`（id 200），IMU 排第一位，**同一次 `sync_read` 全部读回**。
+3. **摄像头走 MIPI，ToF 走 I²C，舵机走串口** —— 三条独立通路，互不干扰。
+
+---
+
 ## 一、整机
 
 | 项 | 值 | 证据 |
