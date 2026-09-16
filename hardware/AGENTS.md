@@ -48,7 +48,32 @@ graph LR
 
 ⚠️ **串口控制台会抢总线。** Armbian 默认在 UART2 上跑登录控制台，`agetty` 占着口会让所有舵机对其他进程**完全不可见**。官方的 `setup-board.sh` 屏蔽了这个 unit；`fuser -v /dev/ttyS2` 是查"谁占着总线"的命令。
 
-⚠️ **本项目选的 AI-FanGe 路线不是这个拓扑** —— 它用 ROBOTIS OpenRB-150 经 USB 接主控，舵机 ID 是 1–14 顺序编号，没有 `imu_to_dxl`，IMU 走独立 I²C。两套 ID 表**不通用**，见 `../docs/ecosystem.md`。
+### 本项目的拓扑（AI-FanGe 路线）
+
+⚠️ **与上面不是同一套。** 官方把半双工收发电路集成在 HAT 上；本路线用现成的 OpenRB-150 经 USB 接主控，IMU 另走 I²C。
+
+```mermaid
+graph LR
+    PI[Raspberry Pi Zero 2 W<br/>跑控制程序] -->|USB| RB[ROBOTIS OpenRB-150<br/>总线适配器<br/>供电 3.7-12.6V]
+    PI -->|I²C GPIO2/3| IMU[BNO08x IMU]
+    RB -->|JST EHR-03<br/>单线半双工 TTL 1Mbps| S1[id 1-5<br/>右腿]
+    RB --> S2[id 6-10<br/>左腿]
+    RB --> S3[id 11-14<br/>头颈]
+    BAT[成品 6V 电池] --> SW[电源开关] --> RB
+    BAT --> REG[5V 稳压] --> PI
+    classDef n fill:#1f6feb,color:#fff
+    class RB n
+```
+
+与官方拓扑的三处关键差异：
+
+| | 官方 | 本路线 |
+|---|---|---|
+| 总线适配器 | 集成在自制 HAT 上 | **现成的 OpenRB-150**，零自制 PCB |
+| IMU 挂在哪 | Dynamixel 总线上（id 200，与舵机同一次 `sync_read`） | **独立 I²C**，与舵机总线无关 |
+| 舵机 ID | 左腿 20–24 / 颈头嘴 30–34 / 右腿 10–14 | **1–14 顺序编号**，无嘴 |
+
+⚠️ 两套 ID 表**不通用**。完整的路线对比见 `../docs/ecosystem.md`。
 
 ## 目录地图
 
